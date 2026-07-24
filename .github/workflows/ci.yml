@@ -13,7 +13,9 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: stable
+          # use the version declared in go.mod, so CI tidies the module the
+          # same way local builds do
+          go-version-file: go.mod
           cache: true
 
       - name: gofmt
@@ -22,6 +24,14 @@ jobs:
           if [ -n "$unformatted" ]; then
             echo "not gofmt'd:"; echo "$unformatted"; exit 1
           fi
+
+      - name: go.mod is tidy
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum || {
+            echo "::error::go.mod/go.sum are out of date - run 'go mod tidy' and commit"
+            exit 1
+          }
 
       - name: vet
         run: go vet ./...

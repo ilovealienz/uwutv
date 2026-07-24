@@ -19,7 +19,9 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: stable
+          # use the version declared in go.mod, so CI tidies the module the
+          # same way local builds do
+          go-version-file: go.mod
           cache: true
 
       # CGO_ENABLED=0 gives a fully static binary: no libc linkage, so the same
