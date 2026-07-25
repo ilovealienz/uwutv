@@ -56,7 +56,12 @@ type Player struct {
 func NewPlayer(ua string, extra []string) *Player { return &Player{ua: ua, extra: extra} }
 func (p *Player) SetProgram(t *tea.Program)       { p.prog = t }
 
-// streamArgs are mpv flags tuned for live MPEG-TS over HTTP (see notes inline).
+// streamArgs are mpv flags tuned for live MPEG-TS over HTTP.
+//
+// reconnect_at_eof is the important one for live TV: a continuous feed that
+// ffmpeg misreads as EOF (a known issue) is reconnected at the ffmpeg layer,
+// seamlessly — no reload, no window blink, no pause. VOD deliberately omits it,
+// since there an EOF really is the end of the file.
 func streamArgs() []string {
 	return []string{
 		"--cache=yes",
@@ -66,7 +71,7 @@ func streamArgs() []string {
 		"--cache-pause-initial=yes",
 		"--cache-pause-wait=1",
 		"--network-timeout=10",
-		"--stream-lavf-o=reconnect=1,reconnect_streamed=1,reconnect_delay_max=5",
+		"--stream-lavf-o=reconnect=1,reconnect_at_eof=1,reconnect_streamed=1,reconnect_on_network_error=1,reconnect_delay_max=5",
 		"--demuxer-lavf-o=fflags=+discardcorrupt",
 		"--no-resume-playback",
 	}
@@ -142,8 +147,8 @@ func (p *Player) PlayKind(url, title string, live bool) int {
 	p.running = true
 	sock := p.sock
 
-	go p.observe(sock) // persistent property observer
-	go p.watchdog()    // stall -> reconnect
+	go p.observe(sock)  // persistent property observer
+	go p.watchdog()     // stall -> reconnect
 	go func(c *exec.Cmd) {
 		_ = c.Wait()
 		p.mu.Lock()
