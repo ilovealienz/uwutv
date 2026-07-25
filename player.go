@@ -147,8 +147,8 @@ func (p *Player) PlayKind(url, title string, live bool) int {
 	p.running = true
 	sock := p.sock
 
-	go p.observe(sock)  // persistent property observer
-	go p.watchdog()     // stall -> reconnect
+	go p.observe(sock) // persistent property observer
+	go p.watchdog()    // stall -> reconnect
 	go func(c *exec.Cmd) {
 		_ = c.Wait()
 		p.mu.Lock()
