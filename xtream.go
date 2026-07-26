@@ -47,26 +47,19 @@ const configTemplate = `# uwutv configuration
 host       = ""
 username   = ""
 password   = ""
-ext        = "ts"              # "ts" (default) or "m3u8"
+ext        = "ts"              # "ts" or "m3u8"
+user_agent = "TiviMate/4.7.0"  # some providers reject unknown clients
 
-# Sent on every request, including the stream itself. Defaults to TiviMate
-# because some providers filter on User-Agent and reject unknown clients.
-# Change it freely if yours doesn't care.
-user_agent = "TiviMate/4.7.0"
-
-# Categories pinned to the top, per mode, in this order. Matches the code
-# before a "|" or a leading prefix, so "UK" (UK| GENERAL) and "EN -" (EN - WWE)
-# both work. The next character must be non-alphanumeric, so "UK" won't also
-# match "UKRAINE".
+# Categories pinned to the top, per mode, in order. Matches the code before a
+# "|" or a leading prefix ("UK" -> "UK| GENERAL", "EN -" -> "EN - WWE").
 priority        = ["8K", "4K", "UK", "US", "IE"]
 movie_priority  = ["EN -", "AMAZON", "APPLE+", "DISNEY+", "DREAMWORKS", "NETFLIX",
                    "PARAMOUNT", "TOP", "UNIVERSAL", "VIAPLAY"]
 series_priority = ["ENGLISH", "AMAZON", "APPLE+", "CRUNCHYROLL", "DISCOVERY+",
                    "DISNEY+", "HBO MAX", "NETFLIX", "PARAMOUNT", "PEACOCK", "SKY"]
 
-# Category filters. Empty = no filtering. A non-empty *_show is a whitelist:
-# only matching categories appear. *_hide always wins over *_show.
-# Globs: * and ?, case-insensitive, matched against the whole category name.
+# Category filters (globs, case-insensitive). Non-empty *_show = whitelist;
+# *_hide always wins.
 live_show   = []
 live_hide   = []
 movie_show  = []
@@ -74,20 +67,12 @@ movie_hide  = []
 series_show = []
 series_hide = []
 
-# Start the next episode automatically when one finishes.
-autoplay_next = true
+autoplay_next = true   # start the next episode when one ends
+epg_offset    = 0.0    # shift guide by N hours if it's wrong (e.g. -1.0)
 
-# Extra mpv flags, appended after the built-in defaults so they win.
-# e.g. ["--demuxer-readahead-secs=8", "--deinterlace=yes"]
+# Extra mpv flags (override the defaults). Silence live SPS log noise with:
+# ["--msg-level=ffmpeg/video=no"]
 mpv_args = []
-
-# Guide time shift in hours, applied to every EPG time. Times already resolve
-# via the panel's own timezone, so leave this at 0 unless the guide is still
-# wrong. Negative moves the guide earlier, positive later, and fractions work:
-#   epg_offset = -1.0   guide shows an hour too late
-#   epg_offset =  2.0   guide shows two hours too early
-#   epg_offset = -0.5   half an hour too late
-epg_offset = 0.0
 `
 
 func configDir() string {

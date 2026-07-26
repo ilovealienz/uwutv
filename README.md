@@ -84,7 +84,7 @@ password = "yourpassword"
 | `live_show` `movie_show` `series_show` | whitelist — when non-empty, only matching categories appear |
 | `live_hide` `movie_hide` `series_hide` | blacklist — always wins over `*_show` |
 | `autoplay_next` | start the next episode when one ends (default `true`) |
-| `mpv_args` | extra mpv flags, appended so they override the built-ins |
+| `mpv_args` | extra mpv flags, appended so they override the built-ins. Set `["--msg-level=ffmpeg/video=no"]` to silence live H.264 SPS log noise |
 | `epg_offset` | guide shift in hours, e.g. `-1.0` if the guide reads an hour late, `2.0` if two hours early, `-0.5` for half an hour. Only needed if the guide is wrong |
 
 Priority matches either the code before a `|` or a leading prefix, so `"UK"`
