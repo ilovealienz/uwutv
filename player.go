@@ -329,7 +329,16 @@ func (p *Player) sendLocked(cmd interface{}) {
 	}
 	defer c.Close()
 	b, _ := json.Marshal(map[string]interface{}{"command": cmd})
-	_, _ = c.Write(append(b, '\n'))
+	if _, err := c.Write(append(b, '\n')); err != nil {
+		return
+	}
+	// Drain mpv's one-line reply before closing. We open/write/close per
+	// command deliberately (a persistent write connection can hang mpv on
+	// repeated loadfile — mpv#3422/#5683), but closing before reading the
+	// reply makes mpv log "Write error (Broken pipe)" as it fails to deliver
+	// the response. A short read gives it somewhere to send that reply.
+	_ = c.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+	_, _ = bufio.NewReader(c).ReadBytes('\n')
 }
 
 // SetTitle updates the on-screen media title (used to show the current EPG
@@ -348,7 +357,11 @@ func (p *Player) SetTitle(title string) {
 		if c, err := net.Dial("unix", sock); err == nil {
 			b, _ := json.Marshal(map[string]interface{}{
 				"command": []interface{}{"set_property", "force-media-title", title}})
-			_, _ = c.Write(append(b, '\n'))
+			if _, err := c.Write(append(b, '\n')); err == nil {
+				// drain the reply so mpv doesn't broken-pipe (see sendLocked)
+				_ = c.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+				_, _ = bufio.NewReader(c).ReadBytes('\n')
+			}
 			_ = c.Close()
 			return
 		}
